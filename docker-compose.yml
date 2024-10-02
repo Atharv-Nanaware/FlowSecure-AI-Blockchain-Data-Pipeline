@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # Zookeeper for Kafka
+  zookeeper:
+    image: zookeeper:3.8
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  # Kafka Broker
+  kafka:
+    image: bitnami/kafka:3.3.2
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  # Cassandra Database
+  cassandra:
+    image: cassandra:4.0
+    environment:
+      - CASSANDRA_CLUSTER_NAME=SparkCluster
+      - CASSANDRA_LISTEN_ADDRESS=localhost
+      - CASSANDRA_RPC_ADDRESS=0.0.0.0
+    ports:
+      - "9042:9042"
+
+  # Postgres Database for Airflow
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    ports:
+      - "5432:5432"
+
+  # Airflow Webserver
+  airflow-webserver:
+    image: apache/airflow:2.6.2-python3.10
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX=True
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: "webserver"
+
+  # Airflow Scheduler
+  airflow-scheduler:
+    image: apache/airflow:2.6.2-python3.10
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    depends_on:
+      - airflow-webserver
+      - postgres
+    command: "scheduler"
