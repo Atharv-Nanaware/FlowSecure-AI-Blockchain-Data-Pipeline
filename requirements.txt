@@ -1,0 +1,18 @@
+# Airflow core and its dependencies
+apache-airflow[crypto,celery,postgres]==2.6.2  # Core Airflow with PostgreSQL and Celery support
+
+# Airflow Providers for better integration with external systems
+apache-airflow-providers-postgres==3.7.1  # PostgreSQL provider for Airflow connections
+apache-airflow-providers-apache-kafka==2.2.2  # Kafka provider for Airflow to manage Kafka-based pipelines
+apache-airflow-providers-apache-cassandra==2.3.1  # Cassandra provider for managing Cassandra interactions
+
+# Database connectors
+psycopg2-binary==2.9.6  # PostgreSQL database adapter
+cassandra-driver==3.25.0  # Cassandra database driver
+
+# Kafka Client for interacting with Kafka brokers from Python
+kafka-python==2.0.2  # Python client for Kafka
+
+# Utility libraries
+requests==2.31.0  # HTTP requests library, useful for API calls within Airflow tasks
+pandas==2.1.1     # Data analysis and manipulation library, often used in data pipelines
